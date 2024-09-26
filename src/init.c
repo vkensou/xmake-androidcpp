@@ -136,7 +136,7 @@ void Init(struct android_app* app)
 
     if (!InitGame())
     {
-        Log("Game not init!");
+        Log("xmake-androidcpp not init!");
         return;
     }
 
@@ -148,7 +148,7 @@ void Init(struct android_app* app)
     gColorHandle = glGetUniformLocation(colorProgram, "u_Color");
 
 
-    Log("FlappyBird is loaded!");
+    Log("xmake-androidcpp is loaded!");
 
     g_Initialized = true;
 }
@@ -160,7 +160,7 @@ void MainLoopStep()
 
     // Setup display size (every frame to accommodate for window resizing)
     glViewport(0, 0, (int)WindowSizeX, (int)WindowSizeY);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     Render();

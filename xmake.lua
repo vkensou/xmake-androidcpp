@@ -1,6 +1,6 @@
 includes("androidcpp")
 
-target("flappybird")
+target("xmake-androidcpp")
     add_rules("androidcpp")
     set_kind("shared")
     add_files("src/*.c")
