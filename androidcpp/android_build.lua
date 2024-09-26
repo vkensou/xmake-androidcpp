@@ -17,17 +17,6 @@ function main(target, android_sdk_version, android_manifest, android_res, androi
 
     -- get ndk
     local ndk = path.translate(assert(toolchain_ndk:config("ndk"), "cannot get NDK!"))
-    local ndk_sdkver = assert(toolchain_ndk:config("ndk_sdkver"), "cannot get the sdk version of NDK!")
-
-    -- get ndk host
-    local ndk_host = os.host() .. "-" .. os.arch()
-    if is_host("windows") then
-        ndk_host = os.arch() == "x64" and "windows-x86_64" or "windows-x86"
-    elseif is_host("macosx") then
-        ndk_host = "darwin-x86_64"
-    elseif is_host("linux") then
-        ndk_host = "linux-x86_64"
-    end
 
     -- get android sdk directory
     local android_sdkdir = path.translate(assert(toolchain_ndk:config("android_sdk"), "please run `xmake f --android_sdk=xxx` to set the android sdk directory!"))
@@ -35,14 +24,6 @@ function main(target, android_sdk_version, android_manifest, android_res, androi
     -- get android build-tools version
     local android_build_toolver = assert(toolchain_ndk:config("build_toolver"), "please run `xmake f --build_toolver=xxx` to set the android build-tools version!")
 
-    -- print(toolchain_ndk)
-    -- print(ndk)
-    -- print(ndk_sdkver)
-    -- print(android_sdkdir)
-    -- print(android_build_toolver)
-    -- print("over")
-
-    print("packing resources...")
     local aapt = path.join(android_sdkdir, "build-tools", android_build_toolver, "aapt" .. (is_host("windows") and ".exe" or ""))
 
     local resonly_apk = path.join(outputtemppath, "res_only.zip")
@@ -54,19 +35,18 @@ function main(target, android_sdk_version, android_manifest, android_res, androi
         "-F", resonly_apk
     }
 
-    -- print(table.concat(aapt_argv, " "))
-    print("archiving libs...")
+    print("packing resources...")
     os.vrunv(aapt, aapt_argv)
 
     import("lib.detect.find_tool")
     local zip = find_tool("7z")
     assert(zip, "zip not found!")
-    -- print(zip)
     local zip_argv = { "a", "-tzip", "-r", 
         resonly_apk,
         path.join(".", libpath)
     }
-    -- print(table.concat(zip_argv, " "))
+
+    print("archiving libs...")
     os.vrunv(zip.program, zip_argv)
 
     local aligned_apk = path.join(outputtemppath, "unsigned.apk")
@@ -81,7 +61,6 @@ function main(target, android_sdk_version, android_manifest, android_res, androi
 
     local final_output_path = outputtemppath
     local final_apk = path.join(final_output_path, target:basename() .. ".apk")
-    -- print(final_apk)
     local apksigner = path.join(android_sdkdir, "build-tools", android_build_toolver, "apksigner" .. (is_host("windows") and ".bat" or ""))
     local apksigner_argv = {
         "sign", 
@@ -90,7 +69,7 @@ function main(target, android_sdk_version, android_manifest, android_res, androi
         "--out", final_apk, 
         "--in", aligned_apk
     }
-    -- print(table.concat(apksigner_argv, " "))
+
     print("signing apk...")
     os.vrunv(apksigner, apksigner_argv)
 

@@ -14,8 +14,8 @@ rule("androidcpp")
             local android_manifest = "AndroidManifest.xml"
             local android_res = "res"
             local android_assets = "assets"
-            local keystore = "mykeystore.jks"
-            local keystore_pass = "12345678"
+            local keystore = "xmake-debug.jks"
+            local keystore_pass = "123456"
             local apk_output_path = "."
             import("android_build")(target, android_sdk_version, android_manifest, android_res, android_assets, keystore, keystore_pass, apk_output_path)
         end)
