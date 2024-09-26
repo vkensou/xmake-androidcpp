@@ -28,7 +28,7 @@ float ScaleY(float percent)
 
 bool InitGame()
 {
-    t_background_day = LoadTexture("sprites/background-day.bmp");
+    t_background_day = LoadTexture("sprites/background-day.png");
     return true;
 }
 
