@@ -6,7 +6,6 @@
 #include "utils.h"
 #include "texture.h"
 #include "shaders.h"
-#include "audio.h"
 #include "game.h"
 
 
@@ -140,8 +139,6 @@ void Init(struct android_app* app)
         Log("Game not init!");
         return;
     }
-
-    CreateAudioEngine();
 
     // Create shader program
     textureProgram = createProgram(vertexShaderTexture, fragmentShaderTexture);
