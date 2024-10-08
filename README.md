@@ -29,6 +29,7 @@ xmake build
 xmake install -o build xmake-androidcpp
 xmake run xmake-androidcpp
 ```
+其中，install命令表示将代码和资源打包成apk，run命令是通过adb将打好的apk安装到设备上并且运行。
 
 一个典型的命令执行结果如下
 ```
@@ -78,6 +79,7 @@ xmake build
 xmake install -o build xmake-androidcpp
 xmake run xmake-androidcpp
 ```
+The install command packages code and resources into an APK, while the run command uses adb to install the APK on a device and run it.
 
 A typical command execution result is as follows
 ```
