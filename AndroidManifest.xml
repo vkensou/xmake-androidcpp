@@ -13,7 +13,7 @@
                   android:label="xmake-androidcpp"
                   android:configChanges="orientation|keyboardHidden">
             <meta-data android:name="android.app.lib_name"
-                       android:value="xmake-androidcpp" />
+                       android:value="main" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

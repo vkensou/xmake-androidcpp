@@ -1,4 +1,4 @@
-function main(target, android_sdk_version, android_manifest, android_res, android_assets, keystore, keystore_pass, apk_output_path)
+function main(target, android_sdk_version, android_manifest, android_res, android_assets, attachedjar, keystore, keystore_pass, apk_output_path)
     local outputpath = path.join("build", "android", "output")
     if os.exists(outputpath) then
         os.rmdir(outputpath)
@@ -9,7 +9,8 @@ function main(target, android_sdk_version, android_manifest, android_res, androi
     os.mkdir(libpath)
     local libarchpath = path.join(libpath, target:arch())
     os.mkdir(libarchpath)
-    os.cp(target:targetfile(), libarchpath)
+    os.cp(path.join(target:installdir(), "lib", "*.so"), libarchpath)
+    os.mv(path.join(libarchpath, target:filename()), path.join(libarchpath, "libmain.so"))
 
     import("core.tool.toolchain")
 
@@ -24,22 +25,32 @@ function main(target, android_sdk_version, android_manifest, android_res, androi
     -- get android build-tools version
     local android_build_toolver = assert(toolchain_ndk:config("build_toolver"), "please run `xmake f --build_toolver=xxx` to set the android build-tools version!")
 
+    local androidjar = path.join(android_sdkdir, "platforms", string.format("android-%s", android_sdk_version), "android.jar")
+
     local aapt = path.join(android_sdkdir, "build-tools", android_build_toolver, "aapt" .. (is_host("windows") and ".exe" or ""))
 
     local resonly_apk = path.join(outputtemppath, "res_only.zip")
     local aapt_argv = {"package", "-f",
         "-M", android_manifest,
-        "-S", android_res,
-        "-A", android_assets,
-        "-I", path.join(android_sdkdir, "platforms", string.format("android-%s", android_sdk_version), "android.jar"),
-        "-F", resonly_apk
+        "-I", androidjar,
+        "-F", resonly_apk,
     }
+
+    if android_res ~= nil then
+        table.insert(aapt_argv, "-S")
+        table.insert(aapt_argv, android_res)
+    end
+
+    if android_assets ~= nil then
+        table.insert(aapt_argv, "-A")
+        table.insert(aapt_argv, android_assets)
+    end
 
     print("packing resources...")
     os.vrunv(aapt, aapt_argv)
 
     import("lib.detect.find_tool")
-    local zip = find_tool("7z")
+    local zip = find_tool("7z") or find_tool("zip")
     assert(zip, "zip not found!")
     local zip_argv = { "a", "-tzip", "-r", 
         resonly_apk,
@@ -48,6 +59,38 @@ function main(target, android_sdk_version, android_manifest, android_res, androi
 
     print("archiving libs...")
     os.vrunv(zip.program, zip_argv)
+
+    if attachedjar ~= nil then
+        local dexpath = path.join(outputpath, "dex")
+        os.mkdir(dexpath)
+
+        local d8 = path.join(android_sdkdir, "build-tools", android_build_toolver, "d8" .. (is_host("windows") and ".bat" or ""))
+
+        local d8_argv = {
+            attachedjar,
+            "--lib", androidjar,
+            "--output", dexpath,
+        }
+        print("compiling java...")
+        os.vrunv(d8, d8_argv)
+
+        local classesdex = path.join(outputtemppath, "classes.dex")
+        os.mv(path.join(dexpath, "classes.dex"), classesdex)
+
+        local zip_argv2 = { "a", "-tzip", 
+            resonly_apk,
+            classesdex,
+        }
+
+        print("archiving java classes...")
+        os.vrunv(zip.program, zip_argv2)
+
+        local zip_argv3 = { "rn", "-tzip", 
+            resonly_apk,
+            classesdex, "classes.dex"
+        }
+        os.vrunv(zip.program, zip_argv3)
+    end
 
     local aligned_apk = path.join(outputtemppath, "unsigned.apk")
     local zipalign = path.join(android_sdkdir, "build-tools", android_build_toolver, "zipalign" .. (is_host("windows") and ".exe" or ""))
